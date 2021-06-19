@@ -16,7 +16,8 @@ try {
         mongoAtlasUri,
         {
             useNewUrlParser: true,
-            useUnifiedTopology: true
+            useUnifiedTopology: true,
+            useFindAndModify: false
         },
         () => console.log("Mongoose is connected"),
     );
@@ -46,12 +47,31 @@ app.get("/", (req, res) => {
         res.json(results);
     })
 })
+app.post("/custom",(req,res)=>{
+    // console.log(req.body)
+    Customers.findById(req.body._id,(err,result)=>{
+        if (err) {
+            return res.status(400).json({error:'Something error'})
+        }
+        // console.log(results,"from")
+        if(!result){
+            return res.status(400).json({error:'Not Found'})
+        }
+        // res.json(results);
+        if(result){
+            // console.log(doc)
+            res.json(result);
+        } 
+    })
+})
 app.post("/",(req,res)=>{
     const fromAcc=req.body.fromAccount;
     const Amounts=parseInt(req.body.Amount);  
     const toAcc=req.body.toAccount;
     const lessAmount=parseInt(fromAcc.balance)-Amounts
     const moreAmount=parseInt(toAcc.balance)+Amounts
+    console.log(parseInt(fromAcc.balance)+" "+lessAmount,"lessAmount")
+    console.log(parseInt(toAcc.balance)+" "+moreAmount,"moreAmount")
     Customers.findByIdAndUpdate(fromAcc._id 
         ,{ $set: { balance: lessAmount } },{new: true, passRawResult: true}
         ,(err,results)=>{
@@ -64,6 +84,7 @@ app.post("/",(req,res)=>{
         }
         // res.json(results);
         if(results){
+            // console.log(results)
             Customers.findByIdAndUpdate(toAcc._id,{ $set: { balance: moreAmount } },{new: true, passRawResult: true},(err,doc)=>{
                 if (err) {
                     return res.status(400).json({error:'Something error'})
@@ -74,6 +95,7 @@ app.post("/",(req,res)=>{
                 }
                 // res.json(results);
                 if(doc){
+                    // console.log(doc)
                     Customers.find((err, docs) => {
                         if (err) return next(err);
                         // console.log(results,"results")
